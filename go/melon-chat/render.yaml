@@ -1,0 +1,45 @@
+# Render Blueprint: melon-chat + jacket-eye
+# https://render.com/docs/blueprint-spec
+#
+# Deploy:
+#   1. Push to GitHub
+#   2. Render Dashboard → Blueprint → Connect repo
+#   3. Set secrets: SAKURA_API_KEY, SAKURA_SECRET, DATABASE_URL
+#   4. Deploy
+
+services:
+  # ★ メイン: LINE風チャット (Go + Neon/PostgreSQL + SSE)
+  - type: web
+    name: melon-chat
+    env: go
+    region: singapore
+    plan: free
+    buildCommand: go build -o melon-chat
+    startCommand: ./melon-chat
+    healthCheckPath: /
+    envVars:
+      - key: SAKURA_API_KEY
+        sync: false
+      - key: SAKURA_SECRET
+        sync: false
+      - key: DATABASE_URL
+        sync: false
+      - key: JACKET_EYE_URL
+        value: https://jacket-eye.onrender.com
+
+  # VLM ジャケ写認識 (Go / Sakura AI proxy)
+  - type: web
+    name: jacket-eye
+    env: go
+    region: singapore
+    plan: free
+    buildCommand: go build -o jacket-eye
+    startCommand: ./jacket-eye
+    healthCheckPath: /api/health
+    envVars:
+      - key: SAKURA_API_KEY
+        sync: false
+      - key: SAKURA_SECRET
+        sync: false
+      - key: SAKURA_ENDPOINT
+        value: https://api.sakura.ai/v1
